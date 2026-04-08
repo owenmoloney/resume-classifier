@@ -1,0 +1,204 @@
+================================================================================
+GROUP CHECK-IN GUIDE — Resume Screening Project (for professor meeting)
+================================================================================
+Use this if you need to explain the project without the main author present.
+Read the "ONE MINUTE PITCH" and "LIKELY QUESTIONS" sections at minimum.
+
+--------------------------------------------------------------------------------
+ONE MINUTE PITCH (memorize or paraphrase)
+--------------------------------------------------------------------------------
+
+We built an automated pipeline for HR-style resume screening. We use a public
+Kaggle resume dataset with labeled job categories (24 categories, ~2,500 resumes).
+
+The system does two things:
+  (1) CLASSIFICATION — Train a Multinomial Naive Bayes classifier on TF-IDF
+      features to predict which job category a piece of text belongs to.
+  (2) RANKING — Given a real job posting as a .txt file, we predict which
+      category that posting looks like, then rank resumes in that category by
+      cosine similarity between the posting and each resume in the same
+      vector space. We output the top 10 matches.
+
+This maps to our data mining course: data preprocessing, feature selection
+(TF-IDF, max 1000 words), supervised classification (Naive Bayes), and an
+information-retrieval style ranking step (cosine similarity).
+
+--------------------------------------------------------------------------------
+WHAT PROBLEM DOES THIS SOLVE? (business / course framing)
+--------------------------------------------------------------------------------
+
+Business: Recruiters get too many resumes. A first pass can automatically
+suggest which resumes are textually closest to a job description, after the
+system guesses which "bucket" (category) the job fits.
+
+Important limitation (say this honestly): We do NOT predict "this person
+should be hired." We only rank text similarity within a predicted category.
+Real hiring needs humans, compliance, and more than bag-of-words.
+
+--------------------------------------------------------------------------------
+HOW TO RUN IT (so you can say you reproduced it)
+--------------------------------------------------------------------------------
+
+1. Put Kaggle API credentials in a .env file in the resume-classifier folder:
+      KAGGLE_USERNAME=...
+      KAGGLE_KEY=...
+
+2. pip install -r requirements.txt
+
+3. From the resume-classifier folder:
+      python main.py
+
+4. Optional: add job postings as plain text files:
+      job_postings/Some_Name.txt
+   Each .txt file produces:
+      results/ranking_Some_Name.txt
+
+If job_postings/ has no .txt files, the pipeline still trains and evaluates;
+it just skips ranking.
+
+--------------------------------------------------------------------------------
+END-TO-END PIPELINE (order of steps in main.py)
+--------------------------------------------------------------------------------
+
+Step 1 — LOAD DATA (src/data_load.py)
+   - Downloads the dataset from Kaggle into data/
+   - Keeps rows whose Category is one of 24 predefined labels (see file)
+   - Uses columns: Resume_str (text), Category (label)
+   - Drops rows with missing text or label
+
+Step 2 — PREPROCESS (src/preprocess.py)
+   - clean_text(): lowercase, remove URLs and non-letters, remove stopwords
+   - LabelEncoder: turns category strings into integers 0..K-1
+   - Train/test split: 80% train, 20% test, stratified (same class proportions)
+   - TF-IDF: fit ONLY on training text (important: avoids leaking test info
+     into the vocabulary). max_features=1000. Also uses sklearn English
+     stopwords inside TF-IDF.
+
+Step 3 — TRAIN (src/model.py)
+   - Multinomial Naive Bayes (good for word-count style sparse features)
+   - Default smoothing alpha=1.0
+
+Step 4 — EVALUATE (src/evaluate.py)
+   - Predicts on the test set
+   - Prints accuracy and sklearn classification_report (precision, recall,
+     F1 per class)
+   - Saves results/confusion_matrix.png
+
+Step 5 — RANK JOB POSTINGS (src/rank.py), if .txt files exist
+   - For each job posting:
+        a) clean_text(posting) same as resumes
+        b) vectorizer.transform(posting) — same vocabulary as training
+        c) model.predict_proba → pick category with highest probability
+        d) Take all resumes whose TRUE Category equals that predicted label
+           (if none, code falls back to all resumes — rare)
+        e) cosine_similarity between posting vector and each candidate resume
+        f) Save top 10 to results/ranking_<filename>.txt
+
+--------------------------------------------------------------------------------
+FILE-BY-FILE (who wrote what logic where)
+--------------------------------------------------------------------------------
+
+main.py
+   Orchestrates: load → preprocess → train → evaluate → rank
+
+src/data_load.py
+   Kaggle download + filter to 24 categories + dropna
+
+src/preprocess.py
+   clean_text(), train/test split, TF-IDF fit on train, transform test
+
+src/model.py
+   MultinomialNB fit and predict
+
+src/evaluate.py
+   Metrics + confusion matrix image
+
+src/rank.py
+   Read job_postings/*.txt, classify posting, cosine rank, write ranking_*.txt
+
+job_postings/
+   You add real or sample job descriptions as .txt files
+
+results/
+   confusion_matrix.png, ranking_*.txt (generated; do not hand-edit)
+
+--------------------------------------------------------------------------------
+KEY TERMS (if the professor uses jargon)
+--------------------------------------------------------------------------------
+
+TF-IDF:
+   Turns text into numbers. Words that are frequent in one document but rare
+   across the corpus get higher weight. We cap at 1000 features = feature
+   selection.
+
+Multinomial Naive Bayes:
+   Supervised classifier for discrete counts / weighted word features. Assumes
+   words are conditionally independent given the class (the "naive" part).
+
+Stratified split:
+   Train and test sets keep roughly the same proportion of each category.
+
+Cosine similarity:
+   Measures angle between two TF-IDF vectors (posting vs resume). Score 0 to 1
+   (higher = more similar text in our vector space).
+
+Why classify the posting first?
+   Narrows candidates to one category before ranking, so the demo ties to
+   labeled resume groups. Alternative would be ranking all resumes globally
+   by similarity only — we combined classification + IR-style ranking.
+
+--------------------------------------------------------------------------------
+LIKELY PROFESSOR QUESTIONS — SHORT ANSWERS
+--------------------------------------------------------------------------------
+
+Q: Is this supervised or unsupervised?
+A: Supervised for the main model — we have Category labels on resumes. The
+   ranking uses cosine similarity; we don't train a separate ranker with
+   relevance labels.
+
+Q: Why Naive Bayes?
+A: Standard for text classification with sparse features; fast, interpretable
+   probabilities (predict_proba). Taught in our classification unit.
+
+Q: Why TF-IDF?
+A: Feature extraction + implicit feature selection (1000 dims). Reduces noise
+   vs raw word counts.
+
+Q: Did you compare many models?
+A: Honestly — the shipped code uses Multinomial NB as the main classifier.
+   Comparing k-NN, logistic regression, or SVM on the same matrix is a natural
+   extension mentioned in README for future work.
+
+Q: Cross-validation / hyperparameter tuning?
+A: Not automated in code yet; parameters are fixed (max_features=1000, alpha=1,
+   80/20 split). Could grid-search max_features and alpha as next step.
+
+Q: How do you evaluate the ranking quality?
+A: We don't have human "relevance" scores for each posting–resume pair. We
+   report classification metrics on held-out resumes. For ranking, we show
+   cosine scores and inspect top snippets qualitatively. That's a limitation.
+
+Q: Data leakage?
+A: TF-IDF is fit on training text only, then applied to test and postings.
+   That matches proper ML practice for this pipeline.
+
+Q: Fairness / bias?
+A: Bag-of-words models can reflect biases in data; this is a course project
+   prototype, not production hiring software.
+
+--------------------------------------------------------------------------------
+IF SOMETHING BREAKS DURING THE DEMO
+--------------------------------------------------------------------------------
+
+- "No postings found" → No .txt in job_postings/; ranking skipped — normal.
+- Kaggle errors → Check .env credentials and internet; dataset must download.
+- NLTK stopwords → First run may download stopwords automatically.
+
+--------------------------------------------------------------------------------
+CREDIT
+--------------------------------------------------------------------------------
+
+Implementation and pipeline design: primary author (your teammate).
+This guide is for group communication and professor check-ins only.
+
+================================================================================

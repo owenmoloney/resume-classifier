@@ -1,0 +1,25 @@
+Posting: Ascendion_Software_Engineer
+Predicted category: INFORMATION-TECHNOLOGY
+Top-5 class probabilities: [('INFORMATION-TECHNOLOGY', 0.1901909854602344), ('ENGINEERING', 0.13434608218978938), ('CONSULTANT', 0.10464508425423077), ('AVIATION', 0.05786658940524705), ('BANKING', 0.04630758087121176)]
+
+Top candidates:
+1. idx=222, score=0.3276, category=INFORMATION-TECHNOLOGY
+   snippet:            Christopher    Townes         Summary     Knowledgeable Information Technology Specialist capable of setting up and optimizing workstations, training users and assisting with process improv
+2. idx=254, score=0.3166, category=INFORMATION-TECHNOLOGY
+   snippet:          INFORMATION TECHNOLOGY SPECIALIST(DISCOUNTPCFIX)       Summary     I am obsessed with technology. It's power to change everything. Technology fuels my passion and commitment to helping organi
+3. idx=242, score=0.3130, category=INFORMATION-TECHNOLOGY
+   snippet:          ADMINISTRATOR OF INFORMATION TECHNOLOGY         Summary    Advanced Desktop Support Lead/Manager with 14 plus years of experience in the Information Technology field providing Tier II - III t
+4. idx=317, score=0.2914, category=INFORMATION-TECHNOLOGY
+   snippet:          PROJECT MANAGER       Summary     Technical Support Professional skilled at resolving complex customer service issues in a timely manner. Enjoys troubleshooting to find solutions to technical
+5. idx=253, score=0.2908, category=INFORMATION-TECHNOLOGY
+   snippet:          INFORMATION TECHNOLOGY SPECIALIST       Professional Profile     Quality-driven and practical Systems Administrator with [Number] years aligning business systems with business policies and gu
+6. idx=276, score=0.2675, category=INFORMATION-TECHNOLOGY
+   snippet:          INFORMATION TECHNOLOGY SPECIALIST           Summary    Highly skilled and results-oriented IT specialist with extensive experience in Software Development, Software Configuration Management, 
+7. idx=330, score=0.2670, category=INFORMATION-TECHNOLOGY
+   snippet:          AMC COMPUTER SPECIALIST AND INTERN       Summary     Information Technology Specialist with twenty nine years of experience launching environments focused on  telecommunications concepts, pri
+8. idx=232, score=0.2386, category=INFORMATION-TECHNOLOGY
+   snippet:          INFORMATION TECHNOLOGY SPECIALIST         Professional Summary    Experienced network professional with outstanding success rate at installing and supporting critical, multi-site networks.  P
+9. idx=218, score=0.2372, category=INFORMATION-TECHNOLOGY
+   snippet:          INFORMATION TECHNOLOGY SPECIALIST	GS11             Experience     07/2004   to   Current     Information Technology Specialist	GS11    Company Name   －   City  ,   State      Information Tech
+10. idx=259, score=0.2324, category=INFORMATION-TECHNOLOGY
+   snippet:          INFORMATION TECHNOLOGY SPECIALIST           Professional Summary     To secure a position as an Information Technology in a challenging and competitive environment, where my information syste

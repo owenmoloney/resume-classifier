@@ -1,0 +1,109 @@
+import os
+from dotenv import load_dotenv
+
+# MUST load .env and set credentials before importing kaggle
+load_dotenv()
+os.environ["KAGGLE_USERNAME"] = os.getenv("KAGGLE_USERNAME")
+os.environ["KAGGLE_KEY"] = os.getenv("KAGGLE_KEY")
+
+# Now import kaggle AFTER credentials are set
+import kaggle
+import pandas as pd
+import glob
+
+def load_and_filter_dataset():
+    print("Authenticating with Kaggle...")
+    kaggle.api.authenticate()
+    
+    print("Downloading dataset...")
+    kaggle.api.dataset_download_files(
+        "snehaanbhawal/resume-dataset",
+        path="data/",
+        unzip=True,
+        force=True
+    )
+    # Inspect downloaded contents and locate CSV recursively
+    try:
+        print("Contents of data/:", os.listdir("data"))
+    except FileNotFoundError:
+        print("data/ directory not found; creating it now.")
+        os.makedirs("data", exist_ok=True)
+        print("Contents of data/:", os.listdir("data"))
+
+    matches = glob.glob("data/**/*.csv", recursive=True)
+    preferred_names = {"resume.csv", "updatedresumedataset.csv", "resume.csv".lower()}
+    preferred = [m for m in matches if os.path.basename(m).lower() in preferred_names]
+    csv_path = preferred[0] if preferred else (matches[0] if matches else None)
+
+    if not csv_path:
+        raise FileNotFoundError(f"No CSV found under data/. Entries: {os.listdir('data')}")
+
+    print(f"Loading CSV: {csv_path}")
+    df = pd.read_csv(csv_path)
+    
+    print(f"Loaded {len(df)} resumes")
+
+    # Diagnose available categories before filtering
+    print("Available categories (top 30):")
+    try:
+        print(df["Category"].value_counts().head(30))
+    except Exception:
+        print("Warning: 'Category' column not found in the dataset.")
+
+    # Normalize categories to improve matching with selected targets
+    def normalize_cat(s: str) -> str:
+        return (str(s).strip().lower()
+                .replace("-", " ")
+                .replace("_", " "))
+
+    # Desired categories (raw) and normalized variants
+    selected_raw = [
+        "HR",
+        "Designer",
+        "Information-Technology",
+        "Teacher",
+        "Advocate",
+        "Business-Development",
+        "Healthcare",
+        "Fitness",
+        "Agriculture",
+        "BPO",
+        "Sales",
+        "Consultant",
+        "Digital-Media",
+        "Automobile",
+        "Chef",
+        "Finance",
+        "Apparel",
+        "Engineering",
+        "Accountant",
+        "Construction",
+        "Public-Relations",
+        "Banking",
+        "Arts",
+        "Aviation",
+    ]
+    selected_norm = [normalize_cat(s) for s in selected_raw]
+
+    # Create a normalized helper column and filter
+    if "Category" not in df.columns:
+        raise ValueError("Expected 'Category' column not found in dataset.")
+    df["__cat_norm__"] = df["Category"].apply(normalize_cat)
+    df_filtered = df[df["__cat_norm__"].isin(selected_norm)]
+
+    if df_filtered.empty:
+        print("No exact normalized matches for the selected categories.")
+        print("Here are the top categories present in the dataset:")
+        print(df["Category"].value_counts().head(30))
+        raise ValueError(
+            "Selected categories not present in dataset. "
+            "Update the category list or provide a mapping from dataset categories "
+            "to the five target groups."
+        )
+
+    # Keep only required columns and drop nulls
+    df = df_filtered[["Resume_str", "Category"]].dropna()
+    print(f"Filtered to {len(df)} resumes across {df['Category'].nunique()} categories")
+    print(f"Category counts after filter:\n{df['Category'].value_counts()}")
+    
+    return df
