@@ -1,0 +1,21 @@
+# Python
+__pycache__/
+*.pyc
+*.py[cod]
+*.egg-info/
+.Python
+env/
+venv/
+.venv/
+
+# Data and results (keep gitkeeps)
+results/*.png
+
+# OS
+.DS_Store
+
+# Kaggle credentials - never commit
+.kaggle/
+.kaggle/kaggle.json
+.env
+kaggle.json

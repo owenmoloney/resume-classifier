@@ -1,0 +1,25 @@
+About the job
+Overview
+
+As a Day 2 Software Engineer, you will be responsible for ensuring the smooth operation of our software products post-deployment. 
+Your role will involve not only fixing coding bugs but also performing end-to-end troubleshooting to identify and resolve issues related to configuration, performance, and integration. 
+You will work closely with cross-functional teams to ensure our software meets the highest standards of quality and reliability.
+
+
+Key Responsibilities:
+
+End-to-End Troubleshooting: Perform comprehensive troubleshooting to diagnose and fix issues related to software configuration, performance, and integration.
+Bug Fixing: Identify, analyse, and resolve coding bugs in a timely manner.
+App Configuration Management: Review and update app configurations to ensure optimal performance and compatibility.
+Integration Support: Assist in resolving integration issues with other systems and platforms.
+Customer Support: Provide technical support to customers and address their concerns effectively.
+Documentation: Maintain detailed documentation of issues, solutions, and best practices.
+Collaboration: Work closely with development, QA, and support teams to ensure seamless software operation.
+
+
+Qualifications:
+
+Proven experience in software development and bug fixing.
+troubleshooting skills with the ability to diagnose and resolve complex issues.
+Familiarity with software configuration management and performance monitoring tools.
+Experience with Node.js, React, Kafka, Key cloak, MQTT, Microservices, Docker, Kubernetes, Podman, MongoDB, and IBM MQ.
