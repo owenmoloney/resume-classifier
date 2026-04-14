@@ -6,6 +6,7 @@ from src.evaluate import evaluate_and_save
 from src.rank import rank_postings
 
 
+
 def main() -> None:
     print("Starting Resume Classifier pipeline...")
 

@@ -77,7 +77,9 @@ def _rank_resumes_by_similarity(
     results: List[Tuple[int, float, str, str]] = []
     for i in top_idx:
         row = sub_df.iloc[i]
-        snippet = str(row["Resume_str"])[:200].replace("\n", " ")
+        # Keep the full resume text (cleaned minimally for output); do not truncate
+        raw_resume = str(row["Resume_str"]) if row["Resume_str"] is not None else ""
+        snippet = raw_resume.strip()
         results.append((int(row["index"]), float(sims[i]), str(row["Category"]), snippet))
     return results
 
@@ -124,12 +126,26 @@ def rank_postings(
         with open(out_path, "w", encoding="utf-8") as f:
             f.write(f"Posting: {stem}\n")
             f.write(f"Predicted category: {pred_label}\n")
-            # Show top-5 class probabilities for transparency
+
+            # Show top-5 class probabilities in a readable format
             top5_idx = np.argsort(-proba)[:5]
             top5 = [(label_encoder.inverse_transform([int(i)])[0], float(proba[i])) for i in top5_idx]
-            f.write(f"Top-5 class probabilities: {top5}\n\n")
+            f.write("Top-5 class probabilities:\n")
+            for label, p in top5:
+                f.write(f"  - {label}: {p:.4f}\n")
+            f.write("\n")
+
             f.write("Top candidates:\n")
             for rank, (row_index, score, category, snippet) in enumerate(ranked, start=1):
+                f.write("------------------------------------------------------------\n")
                 f.write(f"{rank}. idx={row_index}, score={score:.4f}, category={category}\n")
-                f.write(f"   snippet: {snippet}\n")
+                f.write("   snippet:\n")
+                # Write full resume text with indentation to keep output readable
+                for line in snippet.splitlines():
+                    if line.strip() == "":
+                        f.write("\n")
+                    else:
+                        f.write(f"      {line}\n")
+                f.write("\n")
+            f.write("------------------------------------------------------------\n")
         print(f"Wrote: {out_path}")

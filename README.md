@@ -76,6 +76,7 @@ python main.py
 - Console: accuracy and sklearn `classification_report`
 - `results/confusion_matrix.png`
 - For each `job_postings/<name>.txt`: `results/ranking_<name>.txt` (predicted category, top-5 class probabilities, top-k resume indices, cosine scores, short snippets)
+ - For each `job_postings/<name>.txt`: `results/ranking_<name>.txt` (predicted category, top-5 class probabilities, top-k resume indices, cosine scores, full resume text with improved formatting)
 
 ---
 
