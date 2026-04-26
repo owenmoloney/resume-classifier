@@ -7,7 +7,7 @@ Top candidates:
    snippet:            Christopher    Townes         Summary     Knowledgeable Information Technology Specialist capable of setting up and optimizing workstations, training users and assisting with process improv
 2. idx=254, score=0.3166, category=INFORMATION-TECHNOLOGY
    snippet:          INFORMATION TECHNOLOGY SPECIALIST(DISCOUNTPCFIX)       Summary     I am obsessed with technology. It's power to change everything. Technology fuels my passion and commitment to helping organi
-3. idx=242, score=0.3130, category=INFORMATION-TECHNOLOGY
+3. idx=242, score=0.3110, category=INFORMATION-TECHNOLOGY
    snippet:          ADMINISTRATOR OF INFORMATION TECHNOLOGY         Summary    Advanced Desktop Support Lead/Manager with 14 plus years of experience in the Information Technology field providing Tier II - III t
 4. idx=317, score=0.2914, category=INFORMATION-TECHNOLOGY
    snippet:          PROJECT MANAGER       Summary     Technical Support Professional skilled at resolving complex customer service issues in a timely manner. Enjoys troubleshooting to find solutions to technical

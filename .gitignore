@@ -19,3 +19,9 @@ results/*.png
 .kaggle/kaggle.json
 .env
 kaggle.json
+
+data/*.zip
+
+job_postings/*.zip
+
+ob_postings/extracted_labeled_dataset/*.xlsx 

@@ -93,25 +93,103 @@ def preprocess_data(
     return X_train, X_test, y_train, y_test, vectorizer, label_encoder
 
 
-if __name__ == "__main__":
-    # Manual smoke test with a tiny DataFrame
-    pd.set_option("display.width", 200)
-    toy = pd.DataFrame(
-        {
-            "Resume_str": [
-                "Experienced IT engineer with Python, cloud, and CI/CD.",
-                "RN nurse with 5 years in ICU and patient care.",
-                "Teacher specializing in math and curriculum design.",
-                "Financial analyst skilled in valuation & modeling.",
-                "Mechanical engineer with CAD and FEA experience.",
-            ],
-            "Category": [
-                "Information-Technology",
-                "Healthcare",
-                "Teacher",
-                "Finance",
-                "Engineering",
-            ],
-        }
+def preprocess_two_domains_shared_vectorizer(
+    resume_df: pd.DataFrame,
+    posting_df: pd.DataFrame,
+    resume_text_col: str = "Resume_str",
+    posting_text_col: str = "Posting_str",
+    label_col: str = "Category",
+    max_features: int = 1000,
+    test_size: float = 0.2,
+    random_state: int = 42,
+) -> Tuple[
+    np.ndarray,
+    np.ndarray,
+    np.ndarray,
+    np.ndarray,
+    LabelEncoder,
+    np.ndarray,
+    np.ndarray,
+    np.ndarray,
+    np.ndarray,
+    LabelEncoder,
+    TfidfVectorizer,
+    pd.DataFrame,
+    pd.DataFrame,
+]:
+    """
+    Train/test split + label encoding for resumes and postings separately, but use ONE shared TF-IDF
+    vectorizer fitted on the union of *training* texts (resumes + postings).
+
+    This enables:
+    - Two separate classifiers (resume/posting) that operate in the same feature space
+    - Cross-domain cosine similarity (posting vector vs resume vectors)
+
+    Returns:
+    - Xr_train, Xr_test, yr_train, yr_test, resume_label_encoder
+    - Xp_train, Xp_test, yp_train, yp_test, posting_label_encoder
+    - shared_vectorizer
+    - cleaned_resume_df, cleaned_posting_df (with cleaned text columns)
+    """
+    print("[2/6] Cleaning resume and posting text...")
+    resume_df = resume_df.copy()
+    posting_df = posting_df.copy()
+    resume_df[resume_text_col] = resume_df[resume_text_col].astype(str).apply(clean_text)
+    posting_df[posting_text_col] = posting_df[posting_text_col].astype(str).apply(clean_text)
+
+    print("[2/6] Encoding labels (separately for each domain)...")
+    resume_le = LabelEncoder()
+    posting_le = LabelEncoder()
+    yr = resume_le.fit_transform(resume_df[label_col].astype(str).values)
+    yp = posting_le.fit_transform(posting_df[label_col].astype(str).values)
+
+    print("[2/6] Splitting resumes and postings into train/test...")
+    r_train_text, r_test_text, yr_train, yr_test = train_test_split(
+        resume_df[resume_text_col].values,
+        yr,
+        test_size=test_size,
+        random_state=random_state,
+        stratify=yr,
     )
-    preprocess_data(toy)
+    p_train_text, p_test_text, yp_train, yp_test = train_test_split(
+        posting_df[posting_text_col].values,
+        yp,
+        test_size=test_size,
+        random_state=random_state,
+        stratify=yp,
+    )
+
+    print("[2/6] Vectorizing with shared TF-IDF (fit on BOTH train splits only)...")
+    vectorizer = TfidfVectorizer(max_features=max_features, stop_words="english")
+    combined_train_text = np.concatenate([r_train_text, p_train_text])
+    vectorizer.fit(combined_train_text)
+
+    Xr_train = vectorizer.transform(r_train_text)
+    Xr_test = vectorizer.transform(r_test_text)
+    Xp_train = vectorizer.transform(p_train_text)
+    Xp_test = vectorizer.transform(p_test_text)
+
+    print(
+        "Resume train/test shapes: "
+        f"{Xr_train.shape}/{Xr_test.shape}, classes={len(resume_le.classes_)}"
+    )
+    print(
+        "Posting train/test shapes: "
+        f"{Xp_train.shape}/{Xp_test.shape}, classes={len(posting_le.classes_)}"
+    )
+
+    return (
+        Xr_train,
+        Xr_test,
+        yr_train,
+        yr_test,
+        resume_le,
+        Xp_train,
+        Xp_test,
+        yp_train,
+        yp_test,
+        posting_le,
+        vectorizer,
+        resume_df,
+        posting_df,
+    )

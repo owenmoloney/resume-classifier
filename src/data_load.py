@@ -3,25 +3,38 @@ from dotenv import load_dotenv
 
 # MUST load .env and set credentials before importing kaggle
 load_dotenv()
-os.environ["KAGGLE_USERNAME"] = os.getenv("KAGGLE_USERNAME")
-os.environ["KAGGLE_KEY"] = os.getenv("KAGGLE_KEY")
+_kaggle_username = os.getenv("KAGGLE_USERNAME")
+_kaggle_key = os.getenv("KAGGLE_KEY")
+if _kaggle_username:
+    os.environ["KAGGLE_USERNAME"] = _kaggle_username
+if _kaggle_key:
+    os.environ["KAGGLE_KEY"] = _kaggle_key
 
 # Now import kaggle AFTER credentials are set
 import kaggle
 import pandas as pd
 import glob
 
-def load_and_filter_dataset():
-    print("Authenticating with Kaggle...")
-    kaggle.api.authenticate()
-    
-    print("Downloading dataset...")
-    kaggle.api.dataset_download_files(
-        "snehaanbhawal/resume-dataset",
-        path="data/",
-        unzip=True,
-        force=True
-    )
+def load_and_filter_dataset(force_download: bool = False) -> pd.DataFrame:
+    """
+    Load the resume dataset from disk if already present; otherwise download it via Kaggle.
+
+    Set force_download=True to re-download and re-unzip even if a CSV exists locally.
+    """
+    matches = glob.glob("data/**/*.csv", recursive=True)
+    if matches and not force_download:
+        print("Found existing CSV under data/ (skipping Kaggle download).")
+    else:
+        print("Authenticating with Kaggle...")
+        kaggle.api.authenticate()
+
+        print("Downloading dataset...")
+        kaggle.api.dataset_download_files(
+            "snehaanbhawal/resume-dataset",
+            path="data/",
+            unzip=True,
+            force=force_download,
+        )
     # Inspect downloaded contents and locate CSV recursively
     try:
         print("Contents of data/:", os.listdir("data"))

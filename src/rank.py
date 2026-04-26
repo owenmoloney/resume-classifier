@@ -90,6 +90,8 @@ def rank_postings(
     postings_dir: str = "job_postings",
     results_dir: str = "results",
     top_k: int = 10,
+    posting_model: MultinomialNB | None = None,
+    posting_label_encoder: LabelEncoder | None = None,
 ) -> None:
     """
     Given trained artifacts and full resume DataFrame, rank resumes for each posting.
@@ -105,12 +107,16 @@ def rank_postings(
         print(f"No postings found in '{postings_dir}'. Skipping ranking.")
         return
 
-    # Transform all resumes using the fitted vectorizer (deployment transform)
-    all_resume_vecs = vectorizer.transform(df_all["Resume_str"].astype(str).tolist())
+    # Transform all resumes using the fitted vectorizer (deployment transform).
+    # Important: match training preprocessing.
+    all_resume_clean = df_all["Resume_str"].astype(str).apply(clean_text).tolist()
+    all_resume_vecs = vectorizer.transform(all_resume_clean)
 
     for stem, raw_text in postings:
         print(f"Ranking resumes for posting: {stem}")
-        pred_label, proba, p_vec = _predict_posting_category(raw_text, vectorizer, model, label_encoder)
+        use_model = posting_model if posting_model is not None else model
+        use_le = posting_label_encoder if posting_label_encoder is not None else label_encoder
+        pred_label, proba, p_vec = _predict_posting_category(raw_text, vectorizer, use_model, use_le)
 
         ranked = _rank_resumes_by_similarity(
             posting_vec=p_vec,
@@ -126,7 +132,7 @@ def rank_postings(
             f.write(f"Predicted category: {pred_label}\n")
             # Show top-5 class probabilities for transparency
             top5_idx = np.argsort(-proba)[:5]
-            top5 = [(label_encoder.inverse_transform([int(i)])[0], float(proba[i])) for i in top5_idx]
+            top5 = [(use_le.inverse_transform([int(i)])[0], float(proba[i])) for i in top5_idx]
             f.write(f"Top-5 class probabilities: {top5}\n\n")
             f.write("Top candidates:\n")
             for rank, (row_index, score, category, snippet) in enumerate(ranked, start=1):
