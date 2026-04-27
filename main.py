@@ -15,6 +15,7 @@ def main() -> None:
     os.makedirs("results", exist_ok=True)
     os.makedirs("data", exist_ok=True)
     os.makedirs(os.path.join("results", "models"), exist_ok=True)
+    model_dir = os.path.join("results", "models")
 
     # 1) Load
     # Import here to ensure env vars in data_load are applied before kaggle is imported
@@ -28,7 +29,10 @@ def main() -> None:
 
         postings_df = load_job_postings_from_local_zip()
     except FileNotFoundError:
-        print("No labeled job-postings dataset found (skipping posting model training).")
+        print(
+            "No labeled job-postings dataset found (skipping posting model training). "
+            "Expected a CSV inside `data/job_postings/archive.zip` or `job_postings/archive.zip`."
+        )
     except Exception as e:
         print(f"Job-postings dataset found but failed to load: {e}")
 
@@ -38,6 +42,12 @@ def main() -> None:
         model = train_model(X_train, y_train)
         y_pred = predict(model, X_test)
         evaluate_and_save(y_test, y_pred, label_encoder, output_dir="results", filename="confusion_matrix_resumes.png")
+
+        # Persist artifacts so inference can run without retraining.
+        joblib.dump(vectorizer, os.path.join(model_dir, "tfidf_vectorizer.joblib"))
+        joblib.dump(model, os.path.join(model_dir, "resume_model_nb.joblib"))
+        joblib.dump(label_encoder, os.path.join(model_dir, "resume_label_encoder.joblib"))
+        print(f"Saved resume model/vectorizer to {model_dir}")
 
         rank_postings(
             df_all=df,
@@ -101,7 +111,6 @@ def main() -> None:
     )
 
     # 5) Persist artifacts for "new unseen resumes/postings" across runs
-    model_dir = os.path.join("results", "models")
     joblib.dump(shared_vectorizer, os.path.join(model_dir, "tfidf_vectorizer.joblib"))
     joblib.dump(resume_model, os.path.join(model_dir, "resume_model_nb.joblib"))
     joblib.dump(resume_le, os.path.join(model_dir, "resume_label_encoder.joblib"))

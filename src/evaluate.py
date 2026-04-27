@@ -28,10 +28,28 @@ def evaluate_and_save(
     print("Classification Report:")
     print(report)
 
-    # Confusion matrix
+    # Confusion matrix (can get extremely large for many classes)
     cm = confusion_matrix(y_true, y_pred)
     os.makedirs(output_dir, exist_ok=True)
     out_path = os.path.join(output_dir, filename)
+
+    n_classes = len(target_names)
+    # Heuristic: annotated heatmaps become unusably slow/noisy past ~40 classes.
+    if n_classes > 40:
+        print(
+            f"Skipping annotated confusion matrix for {n_classes} classes (too large). "
+            "Saving a non-annotated heatmap without tick labels instead."
+        )
+        plt.figure(figsize=(10, 8))
+        sns.heatmap(cm, annot=False, cmap="Blues", cbar=True, xticklabels=False, yticklabels=False)
+        plt.title(f"Confusion Matrix ({n_classes} classes)")
+        plt.xlabel("Predicted")
+        plt.ylabel("True")
+        plt.tight_layout()
+        plt.savefig(out_path, dpi=200)
+        plt.close()
+        print(f"Confusion matrix saved to: {out_path}")
+        return
 
     plt.figure(figsize=(8, 6))
     sns.heatmap(

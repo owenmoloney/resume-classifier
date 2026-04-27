@@ -69,6 +69,24 @@ cd resume-classifier
 python main.py
 ```
 
+## Inference (predict / match without retraining)
+
+After you’ve run `main.py` at least once, the trained artifacts are saved under `results/models/`.
+You can then run inference on new text without retraining:
+
+```bash
+cd resume-classifier
+
+# Predict category for a new job posting
+.venv/bin/python infer.py predict-posting --text-file job_postings/SomePosting.txt
+
+# Predict category for a new resume
+.venv/bin/python infer.py predict-resume --text-file path/to/resume.txt
+
+# Match a posting to the top resume(s) using cosine similarity (default top-k=5)
+.venv/bin/python infer.py match-posting --text-file job_postings/SomePosting.txt --top-k 1
+```
+
 **Job postings (optional):** Add one or more UTF-8 files named `*.txt` under `job_postings/`. Each file is one posting; the filename (without `.txt`) labels the run. If no `.txt` files are present, ranking is skipped and the rest of the pipeline still runs.
 
 **Outputs (typical):**

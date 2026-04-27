@@ -12,6 +12,9 @@ import nltk
 from nltk.corpus import stopwords
 
 
+_STOP_WORDS: set[str] | None = None
+
+
 def _ensure_nltk_resources() -> None:
     """
     Ensure NLTK resources are available. If missing, attempt to download quietly.
@@ -19,7 +22,9 @@ def _ensure_nltk_resources() -> None:
     try:
         _ = stopwords.words("english")
     except LookupError:
-        nltk.download("stopwords", quiet=True)
+        # Avoid hanging on environments without network access.
+        # We'll fall back to TF-IDF's built-in english stopwords.
+        return
 
 
 def clean_text(text: str) -> str:
@@ -44,10 +49,15 @@ def clean_text(text: str) -> str:
     # Collapse whitespace
     text = re.sub(r"\s+", " ", text).strip()
 
-    # Remove stopwords with NLTK
-    _ensure_nltk_resources()
-    stop_words = set(stopwords.words("english"))
-    tokens = [t for t in text.split() if t not in stop_words]
+    # Remove stopwords with NLTK (cached for performance)
+    global _STOP_WORDS
+    if _STOP_WORDS is None:
+        _ensure_nltk_resources()
+        try:
+            _STOP_WORDS = set(stopwords.words("english"))
+        except LookupError:
+            _STOP_WORDS = set()
+    tokens = [t for t in text.split() if t not in _STOP_WORDS]
 
     return " ".join(tokens)
 
