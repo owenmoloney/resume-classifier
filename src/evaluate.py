@@ -24,7 +24,13 @@ def evaluate_and_save(
     print(f"\nAccuracy: {acc:.4f}\n")
 
     target_names: List[str] = list(label_encoder.classes_)
-    report = classification_report(y_true, y_pred, target_names=target_names, digits=4)
+    report = classification_report(
+        y_true,
+        y_pred,
+        target_names=target_names,
+        digits=4,
+        zero_division=0,
+    )
     print("Classification Report:")
     print(report)
 

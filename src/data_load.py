@@ -21,9 +21,18 @@ def load_and_filter_dataset(force_download: bool = False) -> pd.DataFrame:
 
     Set force_download=True to re-download and re-unzip even if a CSV exists locally.
     """
+    def _has_resume_columns(path: str) -> bool:
+        try:
+            cols = set(pd.read_csv(path, nrows=0).columns.astype(str))
+            return {"Resume_str", "Category"}.issubset(cols)
+        except Exception:
+            return False
+
     matches = glob.glob("data/**/*.csv", recursive=True)
-    if matches and not force_download:
-        print("Found existing CSV under data/ (skipping Kaggle download).")
+    resume_csvs = [m for m in matches if _has_resume_columns(m)]
+
+    if resume_csvs and not force_download:
+        print("Found existing resume CSV under data/ (skipping Kaggle download).")
     else:
         print("Authenticating with Kaggle...")
         kaggle.api.authenticate()
@@ -44,12 +53,20 @@ def load_and_filter_dataset(force_download: bool = False) -> pd.DataFrame:
         print("Contents of data/:", os.listdir("data"))
 
     matches = glob.glob("data/**/*.csv", recursive=True)
-    preferred_names = {"resume.csv", "updatedresumedataset.csv", "resume.csv".lower()}
+    preferred_names = {"resume.csv", "updatedresumedataset.csv"}
     preferred = [m for m in matches if os.path.basename(m).lower() in preferred_names]
-    csv_path = preferred[0] if preferred else (matches[0] if matches else None)
+
+    csv_path = None
+    for candidate in (preferred + matches):
+        if candidate and _has_resume_columns(candidate):
+            csv_path = candidate
+            break
 
     if not csv_path:
-        raise FileNotFoundError(f"No CSV found under data/. Entries: {os.listdir('data')}")
+        raise FileNotFoundError(
+            "No resume CSV found under data/ containing columns 'Resume_str' and 'Category'. "
+            f"CSV candidates found: {len(matches)}"
+        )
 
     print(f"Loading CSV: {csv_path}")
     df = pd.read_csv(csv_path)

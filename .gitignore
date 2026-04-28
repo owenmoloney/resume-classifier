@@ -25,3 +25,6 @@ data/*.zip
 job_postings/*.zip
 
 ob_postings/extracted_labeled_dataset/*.xlsx 
+
+# Large datasets (keep out of git history)
+data/Resume/Resume.csv

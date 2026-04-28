@@ -97,6 +97,38 @@ cd resume-classifier
 
 ---
 
+## Experiments (model comparison + cross-validation)
+
+To address the “spiral approach” / model exploration expectation, this repo includes a lightweight CV runner that compares common text baselines on the same TF‑IDF features.
+
+Run:
+
+```bash
+cd resume-classifier
+python3 experiments.py
+```
+
+Optional (try bigrams):
+
+```bash
+python3 experiments.py --bigrams
+```
+
+**5-fold CV results (macro-F1 prioritized):**
+
+| Model | CV macro-F1 (mean ± std) | CV accuracy (mean ± std) |
+|---|---:|---:|
+| LinearSVC | 0.6464 ± 0.0268 | 0.6952 ± 0.0173 |
+| LogisticRegression | 0.6100 ± 0.0078 | 0.6687 ± 0.0111 |
+| MultinomialNB (alpha=0.1) | 0.5209 ± 0.0076 | 0.5789 ± 0.0078 |
+| MultinomialNB (alpha=0.5) | 0.5059 ± 0.0120 | 0.5753 ± 0.0082 |
+| MultinomialNB (alpha=1.0) | 0.4967 ± 0.0151 | 0.5725 ± 0.0131 |
+| MultinomialNB (alpha=2.0) | 0.4809 ± 0.0089 | 0.5644 ± 0.0111 |
+
+**Takeaway:** on this dataset + feature setup, **Linear SVM (LinearSVC)** is the strongest baseline by macro‑F1, while **Naive Bayes** is simpler/faster but less accurate.
+
+---
+
 ## Final project checklist (mapped to this repo)
 
 ### 1. Frame the problem and look at the big picture
@@ -162,8 +194,8 @@ TF-IDF applies **L2 normalization** per document by default in scikit-learn’s 
 
 ### 4. Explore many models (spiral approach)
 
-**Current codebase:** one main classifier—**Multinomial Naive Bayes**—with default `alpha=1.0`.  
-**Comparison / iteration:** not automated in this repository. Reasonable extensions from coursework (k-NN or linear models on the same TF-IDF matrix, confusion-matrix comparison) can be added in a notebook or `src/` without changing the data contract.
+**Current codebase:** multiple baseline classifiers are supported via `experiments.py` (NB, Logistic Regression, Linear SVM) on the same TF‑IDF features.  
+**Comparison / iteration:** `experiments.py` runs **Stratified 5-fold cross-validation** and prints a copy/paste markdown table of macro‑F1 + accuracy, plus a tiny NB `alpha` sweep.
 
 **Significant “variables” for text models:** interpret via **high TF-IDF weight** terms per class (e.g. `feature_names_out` with NB `feature_log_prob_`)—not wired as a script here, but standard for reports.
 
